@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avaliação Protegida</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    text-align: center;
+    margin: 20px;
+  }
+
+  h2 { color: #333; }
+
+  .aviso {
+    color: red;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+
+  #loginBox {
+    background: #fff;
+    max-width: 420px;
+    margin: auto;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0,0,0,.1);
+  }
+
+  input {
+    width: 95%;
+    padding: 12px;
+    margin: 10px 0;
+    font-size: 16px;
+  }
+
+  button {
+    padding: 12px 25px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  iframe {
+    display: none;
+    width: 95%;
+    max-width: 720px;
+    height: 800px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    margin-top: 20px;
+  }
+
+  footer {
+    margin-top: 30px;
+    font-size: 12px;
+    color: #555;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>📝 Avaliação Online</h2>
+<p class="aviso">⚠️ Não atualize a página, não saia da aba e não troque de aplicativo.</p>
+
+<!-- IDENTIFICAÇÃO -->
+<div id="loginBox">
+  <h3>Identificação do Aluno</h3>
+  <input type="text" id="matricula" placeholder="Matrícula do aluno">
+  <input type="text" id="nome" placeholder="Nome completo">
+  <button onclick="liberarFormulario()">Acessar Avaliação</button>
+  <p id="erro" style="color:red;"></p>
+</div>
+
+<!-- FORMULÁRIO -->
+<iframe
+  id="formulario"
+  src="https://forms.gle/pFGacJYEbgHM9Sga9"
+  frameborder="0">
+</iframe>
+
+<footer>
+  <p>&copy; 2025 – Sistema de Avaliação Controlada</p>
+</footer>
+
+<script>
+/* ==================================================
+   VARIÁVEIS DE CONTROLE
+   ================================================== */
+let provaIniciada = false;
+let tentativas = 0;
+const maxTentativas = 1;
+
+/* ==================================================
+   LIBERAR FORMULÁRIO
+   ================================================== */
+function liberarFormulario() {
+  const matricula = document.getElementById("matricula").value.trim();
+  const nome = document.getElementById("nome").value.trim();
+
+  if (matricula === "" || nome === "") {
+    document.getElementById("erro").innerText =
+      "⚠️ Informe matrícula e nome completo.";
+    return;
+  }
+
+  provaIniciada = true;
+  localStorage.setItem("prova_iniciada", "true");
+
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("formulario").style.display = "block";
+}
+
+/* ==================================================
+   BLOQUEIO AO ATUALIZAR
+   ================================================== */
+window.addEventListener("beforeunload", function () {
+  if (provaIniciada) {
+    localStorage.setItem("prova_bloqueada", "true");
+  }
+});
+
+/* ==================================================
+   BLOQUEIO SE TENTAR VOLTAR
+   ================================================== */
+if (localStorage.getItem("prova_bloqueada") === "true") {
+  bloquear("❌ A página foi atualizada após o início da avaliação. Avaliação BLOQUEADA.");
+}
+
+/* ==================================================
+   SAÍDA DA ABA / APP
+   ================================================== */
+function verificarSaida() {
+  if (!provaIniciada) return;
+
+  tentativas++;
+  if (tentativas > maxTentativas) {
+    localStorage.setItem("prova_bloqueada", "true");
+    bloquear("🚫 Você saiu da aba ou do aplicativo. Avaliação BLOQUEADA.");
+  }
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) verificarSaida();
+});
+
+window.addEventListener("blur", verificarSaida);
+window.addEventListener("pagehide", verificarSaida);
+
+/* ==================================================
+   FUNÇÃO DE BLOQUEIO
+   ================================================== */
+function bloquear(msg) {
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("formulario").style.display = "none";
+  alert(msg);
+}
+</script>
+
+</body>
+</html>
+
+
